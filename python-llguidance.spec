@@ -12,6 +12,7 @@ Source:         %{pypi_source llguidance}
 
 BuildRequires:  python3-devel
 BuildRequires:  gcc
+BuildRequires:  cargo-rpm-macros
 
 
 # Fill in the actual package description to submit package to Fedora
@@ -28,13 +29,17 @@ Summary:        %{summary}
 
 %prep
 %autosetup -p1 -n llguidance-%{version}
+# Rust bindings: resolve crates against Fedora's packaged registry (offline).
+%cargo_prep
 
 
 %generate_buildrequires
 %pyproject_buildrequires
+%cargo_generate_buildrequires
 
 
 %build
+export RUSTFLAGS='%{build_rustflags}'
 %pyproject_wheel
 
 
