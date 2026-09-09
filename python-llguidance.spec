@@ -8,7 +8,14 @@ Summary:        Bindings for the Low-level Guidance _llguidance_ Rust library fo
 # https://docs.fedoraproject.org/en-US/packaging-guidelines/LicensingGuidelines/
 License:        MIT
 URL:            https://github.com/microsoft/llguidance
-Source:         %{pypi_source llguidance}
+Source0:        %{pypi_source llguidance}
+# Vendored Rust dependencies. llguidance's crate graph pulls several crates that
+# are either absent from Fedora (derivre, jsonschema, referencing, tiktoken-rs)
+# or only present at incompatible versions (pyo3 0.28, tokenizers 0.21). Rather
+# than package each one, the whole graph is built offline from a vendor tarball.
+# It is not shipped in a lookaside cache: rust-sources.sh regenerates it with
+# `cargo vendor` at build time (see that script).
+Source1:        llguidance-%{version}-vendor.tar.xz
 
 BuildRequires:  python3-devel
 BuildRequires:  gcc
@@ -28,14 +35,18 @@ Summary:        %{summary}
 
 
 %prep
-%autosetup -p1 -n llguidance-%{version}
-# Rust bindings: resolve crates against Fedora's packaged registry (offline).
-%cargo_prep
+# -a1 unpacks the vendor tarball (Source1) into the source tree as ./vendor.
+%autosetup -p1 -n llguidance-%{version} -a1
+# Build the Rust crate graph from the vendored sources, fully offline. This
+# replaces %cargo_generate_buildrequires: no per-crate BuildRequires are needed
+# because every dependency is supplied by ./vendor.
+%cargo_prep -v vendor
 
 
 %generate_buildrequires
+# Only the Python-side build requirements (maturin, ...). The Rust deps come
+# from the vendor tree, so %cargo_generate_buildrequires is intentionally absent.
 %pyproject_buildrequires
-%cargo_generate_buildrequires
 
 
 %build
