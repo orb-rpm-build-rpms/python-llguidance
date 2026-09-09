@@ -38,14 +38,15 @@ Summary:        %{summary}
 # -a1 unpacks the vendor tarball (Source1) into the source tree as ./vendor.
 %autosetup -p1 -n llguidance-%{version} -a1
 # Build the Rust crate graph from the vendored sources, fully offline. This
-# replaces %cargo_generate_buildrequires: no per-crate BuildRequires are needed
-# because every dependency is supplied by ./vendor.
+# replaces the cargo buildrequires generator: no per-crate BuildRequires are
+# needed because every dependency is supplied by ./vendor.
 %cargo_prep -v vendor
 
 
 %generate_buildrequires
 # Only the Python-side build requirements (maturin, ...). The Rust deps come
-# from the vendor tree, so %cargo_generate_buildrequires is intentionally absent.
+# from the vendor tree, so the cargo buildrequires generator is intentionally
+# absent.
 %pyproject_buildrequires
 
 
