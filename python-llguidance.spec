@@ -62,7 +62,13 @@ export RUSTFLAGS='%{build_rustflags}'
 
 
 %check
-%pyproject_check_import
+# llguidance.{hf,cli,llamacpp,mlx,numpy,torch} are optional integration shims
+# that import heavy frameworks (transformers, huggingface_hub, llama_cpp, mlx,
+# numpy, torch) at module top level. Those are only needed by users wiring
+# llguidance to that backend, are not build dependencies, and are absent from
+# the build root, so skip them in the build-time import check. The core modules
+# and llguidance.tiktoken import cleanly.
+%pyproject_check_import -e 'llguidance.hf' -e 'llguidance.cli' -e 'llguidance.llamacpp' -e 'llguidance.mlx' -e 'llguidance.numpy' -e 'llguidance.torch'
 
 
 %files -n python3-llguidance -f %{pyproject_files}
